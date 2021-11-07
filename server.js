@@ -99,10 +99,14 @@ io.on('connection', socket => {
     socket.on('login', data => {
         if (data.pwd === 'RGliaUNvbkxhbmcyMQ==') {
             console.log('Connexion admin réussie');
-            let token = Math.floor(Math.random() * 10000);
+            let token = Math.floor(Math.random() * 100000);
             tokens.push(token);
             socket.emit('trust', { token });
         }
+    });
+
+    socket.on('logout', data => {
+        // Remove le token
     });
 
 });
