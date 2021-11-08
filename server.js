@@ -21,8 +21,10 @@ const ObjectId = require('mongodb').ObjectID;
 const uri = "mongodb+srv://Pazu:ufn0ddI1m5f04KWW@pazucluster.klrce.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 const clusterName = 'PazuSarl';
+
 const collectionName = 'DibiDictonary';
 const collectionMinecraftName = 'Minecraft';
+const collectionLogsName = 'logsDirtyPazu';
 
 client.connect(async (err) => {
     if (err) throw err;
@@ -143,6 +145,15 @@ io.on('connection', socket => {
         }
     });
 
+    // Logs
+
+    socket.on('fetchLogs', () => {
+        client.db(clusterName).collection(collectionLogsName).find().toArray((err, res) => {
+            if (err) throw err;
+            socket.emit('responseLogs', {logs: res});
+        });
+    });
+
     // Tokens
 
     socket.on('login', data => {
@@ -164,7 +175,7 @@ function log(message) {
     let log = { message, timestamp: new Date() };
     console.log(message);
     try {
-        client.db(clusterName).collection('logsDirtyPazu').insertOne(log);
+        client.db(clusterName).collection(collectionLogsName).insertOne(log);
     } catch (e) {
         socket.emit('responseAddWord', {status: 1, mes: 'Erreur dans l\'enregistrement du mot : ' + e.message });
         throw e;
