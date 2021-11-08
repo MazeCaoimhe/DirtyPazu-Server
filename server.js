@@ -48,7 +48,7 @@ io.on('connection', socket => {
                 console.log(mes);
                 socket.emit('responseAddWord', {status: 2, mes: mes });
             } else {
-                console.log('Ajout d\'un mot : ' + word.dibi);
+                log('Ajout d\'un mot : ' + word.dibi);
                 try {
                     client.db(clusterName).collection(collectionName).insertOne(word);
                 } catch (e) {
@@ -70,13 +70,13 @@ io.on('connection', socket => {
                 console.log(mes);
                 socket.emit('responseEditWord', {status: 2, mes: mes });
             } else {
-                console.log(JSON.stringify(word, null, 3));
                 try {
                     client.db(clusterName).collection(collectionName).updateOne({_id: ObjectId(word._id)}, {$set: {dibi: word.dibi, french: word.french, english: word.english, partOfSpeech: word.partOfSpeech, author: word.author, date: word.date, description: word.description}}, (err, res) => {console.log(res);}, false);
                 } catch (e) {
                     socket.emit('responseEditWord', {status: 1, mes: 'Erreur dans la modification du mot : ' + e.message });
                     throw e;
                 }
+                log(`Mot édité : ${word.dibi} => ${data.oldWord.dibi}, ${word.french} => ${data.oldWord.french}, ${word.english} => ${data.oldWord.english}, ${word.description} => ${data.oldWord.description}, ${word.author} => ${data.oldWord.author}`);
                 socket.emit('responseEditWord', {status: 0, mes: word.dibi + ' modifié avec succès.' });
             }
         }
@@ -87,7 +87,7 @@ io.on('connection', socket => {
             socket.emit('wrongToken');
         } else {
             let word = data.word;
-            console.log('Suppression d\'un mot : ' + word.dibi);
+            log('Suppression d\'un mot : ' + word.dibi);
             try {
                 client.db(clusterName).collection(collectionName).deleteOne({_id: ObjectId(word._id)});
             } catch (e) {
@@ -97,8 +97,8 @@ io.on('connection', socket => {
     });
 
     socket.on('login', data => {
-        if (data.pwd === 'RGliaUNvbkxhbmcyMQ==') {
-            console.log('Connexion admin réussie');
+        if (data.pwd === 'RGliaUppa3NhaWZvMjE=') {
+            log('Connexion admin réussie');
             let token = Math.floor(Math.random() * 100000);
             tokens.push(token);
             socket.emit('trust', { token });
@@ -110,6 +110,17 @@ io.on('connection', socket => {
     });
 
 });
+
+function log(message) {
+    let log = { message, timestamp: new Date() };
+    console.log(message);
+    try {
+        client.db(clusterName).collection('logsDirtyPazu').insertOne(log);
+    } catch (e) {
+        socket.emit('responseAddWord', {status: 1, mes: 'Erreur dans l\'enregistrement du mot : ' + e.message });
+        throw e;
+    }
+}
  
 http.listen(port, () => {
     console.log('App listening on port ' + port);
