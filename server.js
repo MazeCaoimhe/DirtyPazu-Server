@@ -22,6 +22,7 @@ const uri = "mongodb+srv://Pazu:ufn0ddI1m5f04KWW@pazucluster.klrce.mongodb.net/m
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 const clusterName = 'PazuSarl';
 const collectionName = 'DibiDictonary';
+const collectionMinecraftName = 'Minecraft';
 
 client.connect(async (err) => {
     if (err) throw err;
@@ -29,6 +30,8 @@ client.connect(async (err) => {
 
 // Exemple
 io.on('connection', socket => {
+
+    // Dictionnaire
 
     socket.on('fetchDict', () => {
         console.log('Récupération du dico');
@@ -95,6 +98,52 @@ io.on('connection', socket => {
             }
         }
     });
+
+    // Minecraft
+
+    socket.on('fetchMinecraft', () => {
+        console.log('Récupération des mots de Minecraft');
+        client.db(clusterName).collection(collectionMinecraftName).find().toArray((err, res) => {
+            if (err) throw err;
+            socket.emit('loadMinecraftWordList', {dict: res});
+        });
+    });
+
+    socket.on('fetchMinecraftForDl', () => {
+        console.log('Récupération des mots de Minecraft');
+        client.db(clusterName).collection(collectionMinecraftName).find().toArray((err, res) => {
+            if (err) throw err;
+            socket.emit('loadMinecraftWordListForDl', {dict: res});
+        });
+    });
+
+    socket.on('editMcWord', data => {
+        if (!tokens.includes(data.token)) {
+            socket.emit('wrongToken');
+        } else {
+            try {
+                client.db(clusterName).collection(collectionMinecraftName).updateOne({_id: ObjectId(data._id)}, {$set: {dibi: data.newWord, done: data.done}}, (err, res) => {console.log(res);}, false);
+            } catch (e) {
+                throw e;
+            }
+            log(`Mot minecraft édité : ${data.english} = ${data.newWord}`);
+        }
+    });
+
+    socket.on('editDoneMcWord', data => {
+        if (!tokens.includes(data.token)) {
+            socket.emit('wrongToken');
+        } else {
+            try {
+                client.db(clusterName).collection(collectionMinecraftName).updateOne({_id: ObjectId(data._id)}, {$set: {done: data.done}}, (err, res) => {console.log(res);}, false);
+            } catch (e) {
+                throw e;
+            }
+            log(`Mot minecraft mis à : ${data.done}`);
+        }
+    });
+
+    // Tokens
 
     socket.on('login', data => {
         if (data.pwd === 'RGliaUppa3NhaWZvMjE=') {
