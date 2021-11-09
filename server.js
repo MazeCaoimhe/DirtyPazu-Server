@@ -207,7 +207,7 @@ app.get('/dictionnary/getWords/all', function(req, res) {
  */
 app.get('/dictionnary/getWords/query', function(req, res) {
     let query = { };
-    req.query._id ? query._id = req.query._id : { };
+    req.query._id ? query._id = ObjectID(req.query._id) : { };
     req.query.dibi ? query.dibi = req.query.dibi : { };
     req.query.french ? query.french = req.query.french : { };
     req.query.english ? query.english = req.query.english : { };
