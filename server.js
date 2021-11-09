@@ -81,7 +81,13 @@ io.on('connection', socket => {
                     socket.emit('responseEditWord', {status: 1, mes: 'Erreur dans la modification du mot : ' + e.message });
                     throw e;
                 }
-                log(`Mot édité : ${word.dibi} => ${data.oldWord.dibi}, ${word.french} => ${data.oldWord.french}, ${word.english} => ${data.oldWord.english}, ${word.description} => ${data.oldWord.description}, ${word.author} => ${data.oldWord.author}`);
+                let modifs = [];
+                word.dibi === data.oldWord.dibi ? {} : modifs.push(data.oldWord.dibi + ' => ' + word.dibi);
+                word.french === data.oldWord.french ? {} : modifs.push(data.oldWord.french + ' => ' + word.french);
+                word.english === data.oldWord.english ? {} : modifs.push(data.oldWord.english + ' => ' + word.english);
+                word.description === data.oldWord.description ? {} : modifs.push(data.oldWord.description + ' => ' + word.description);
+                word.author === data.oldWord.author ? {} : modifs.push(data.oldWord.author + ' => ' + word.author);
+                log(`Mot édité : ${modifs.join(', ')}`);
                 socket.emit('responseEditWord', {status: 0, mes: word.dibi + ' modifié avec succès.' });
             }
         }
@@ -181,6 +187,40 @@ function log(message) {
         throw e;
     }
 }
+
+/////////
+// API //
+/////////
+
+/**
+ * 
+ */
+app.get('/dictionnary/getWords/all', function(req, res) {
+    client.db(clusterName).collection(collectionName).find().toArray((err, res2) => {
+        if (err) throw err;
+        res.send(JSON.stringify(res2, null, 3));
+    });
+});
+
+/**
+ * 
+ */
+app.get('/dictionnary/getWords/query', function(req, res) {
+    let query = { };
+    req.query._id ? query._id = req.query._id : { };
+    req.query.dibi ? query.dibi = req.query.dibi : { };
+    req.query.french ? query.french = req.query.french : { };
+    req.query.english ? query.english = req.query.english : { };
+    req.query.partOfSpeech ? query.partOfSpeech = req.query.partOfSpeech : { };
+    req.query.author ? query.author = req.query.author : { };
+    req.query.date ? query.date = req.query.date : { };
+    req.query.description ? query.description = req.query.description : { };
+    console.log(query);
+    client.db(clusterName).collection(collectionName).find(query).toArray((err, res2) => {
+        if (err) throw err;
+        res.send(JSON.stringify(res2, null, 3));
+    });
+});
  
 http.listen(port, () => {
     console.log('App listening on port ' + port);
