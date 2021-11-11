@@ -23,6 +23,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 const clusterName = 'PazuSarl';
 
 const collectionName = 'DibiDictonary';
+const collectionGrammarName = 'grammarRules';
 const collectionMinecraftName = 'Minecraft';
 const collectionLogsName = 'logsDirtyPazu';
 
@@ -90,6 +91,74 @@ io.on('connection', socket => {
                 log(`Mot édité : ${modifs.join(', ')}`);
                 socket.emit('responseEditWord', {status: 0, mes: word.dibi + ' modifié avec succès.' });
             }
+        }
+    });
+
+    socket.on('deleteWord', data => {
+        if (!tokens.includes(data.token)) {
+            socket.emit('wrongToken');
+        } else {
+            let word = data.word;
+            log('Suppression d\'un mot : ' + word.dibi);
+            try {
+                client.db(clusterName).collection(collectionName).deleteOne({_id: ObjectId(word._id)});
+            } catch (e) {
+                throw e;
+            }
+        }
+    });
+
+    // Grammaire
+
+    socket.on('fetchGrammarRules', () => {
+        console.log('Récupération des règles de grammaire');
+        client.db(clusterName).collection(collectionGrammarName).find().toArray((err, res) => {
+            if (err) throw err;
+            socket.emit('loadRules', {rules: res});
+        });
+    });
+
+    socket.on('addRule', data => {
+        if (!tokens.includes(data.token)) {
+            socket.emit('wrongToken');
+        } else {
+            let word = data.newWord;
+            if (!word.dibi || !word.french) {
+                const mes = 'Impossible d\'ajouter le mot ' + word.dibi + ' car il faut au moins le mot en Dibi et sa tradution en Français'
+                console.log(mes);
+                socket.emit('responseAddWord', {status: 2, mes: mes });
+            } else {
+                log('Ajout d\'un mot : ' + word.dibi);
+                try {
+                    client.db(clusterName).collection(collectionGrammarName).insertOne(word);
+                } catch (e) {
+                    socket.emit('responseAddWord', {status: 1, mes: 'Erreur dans l\'enregistrement du mot : ' + e.message });
+                    throw e;
+                }
+                socket.emit('responseAddWord', {status: 0, mes: word.dibi + ' enregistré avec succès.' });
+            }
+        }
+    });
+
+    socket.on('editRule', data => {
+        if (!tokens.includes(data.token)) {
+            socket.emit('wrongToken');
+        } else {
+            let rule = data.rule;
+            try {
+                client.db(clusterName).collection(collectionGrammarName).updateOne({_id: ObjectId(word._id)}, {$set: {dibi: word.dibi, french: word.french, english: word.english, partOfSpeech: word.partOfSpeech, author: word.author, date: word.date, description: word.description}}, (err, res) => {console.log(res);}, false);
+            } catch (e) {
+                socket.emit('responseEditWord', {status: 1, mes: 'Erreur dans la modification du mot : ' + e.message });
+                throw e;
+            }
+            let modifs = [];
+            word.dibi === data.oldWord.dibi ? {} : modifs.push(data.oldWord.dibi + ' => ' + word.dibi);
+            word.french === data.oldWord.french ? {} : modifs.push(data.oldWord.french + ' => ' + word.french);
+            word.english === data.oldWord.english ? {} : modifs.push(data.oldWord.english + ' => ' + word.english);
+            word.description === data.oldWord.description ? {} : modifs.push(data.oldWord.description + ' => ' + word.description);
+            word.author === data.oldWord.author ? {} : modifs.push(data.oldWord.author + ' => ' + word.author);
+            log(`Mot édité : ${modifs.join(', ')}`);
+            socket.emit('responseEditWord', {status: 0, mes: word.dibi + ' modifié avec succès.' });
         }
     });
 
@@ -193,7 +262,7 @@ function log(message) {
 /////////
 
 /**
- * 
+ * Fourni la liste de tous les mots du dictionnaire
  */
 app.get('/dictionnary/getWords/all', function(req, res) {
     client.db(clusterName).collection(collectionName).find().toArray((err, res2) => {
