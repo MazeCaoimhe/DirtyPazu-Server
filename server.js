@@ -102,6 +102,7 @@ io.on('connection', socket => {
             log('Suppression d\'un mot : ' + word.dibi);
             try {
                 client.db(clusterName).collection(collectionName).deleteOne({_id: ObjectId(word._id)});
+                socket.emit('wordDeleted', { });
             } catch (e) {
                 throw e;
             }
@@ -237,6 +238,14 @@ io.on('connection', socket => {
             let token = Math.floor(Math.random() * 100000);
             tokens.push(token);
             socket.emit('trust', { token });
+        }
+    });
+
+    socket.on('isMyTokenValid', tok => {
+        console.log('isMyTokenValid');
+        if (tokens.includes(tok)) {
+            console.log('trust');
+            socket.emit('trust', { tok });
         }
     });
 
