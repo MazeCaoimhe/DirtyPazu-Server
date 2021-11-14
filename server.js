@@ -12,8 +12,7 @@ const port = process.env.PORT || 5000;
 app.set(port, process.env.PORT);
 app.use(express.static('./client/'));
 
-// Liste des Tokens
-var tokens = [];
+adminPassword = 'RGliaUppa3NhaWZvMjE='; // Mot de passe administrateur
  
 // MongoDB
 const { MongoClient } = require('mongodb');
@@ -23,7 +22,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 const clusterName = 'PazuSarl';
 
 const collectionName = 'DibiDictonary';
-const collectionGrammarName = 'grammarRules';
+const collectionGrammarName = 'GrammarRules';
 const collectionMinecraftName = 'Minecraft';
 const collectionLogsName = 'logsDirtyPazu';
 
@@ -31,7 +30,6 @@ client.connect(async (err) => {
     if (err) throw err;
 });
 
-// Exemple
 io.on('connection', socket => {
 
     // Dictionnaire
@@ -45,8 +43,8 @@ io.on('connection', socket => {
     });
 
     socket.on('addWord', data => {
-        if (!tokens.includes(data.token)) {
-            socket.emit('wrongToken');
+        if (checkPwd(data.pwd)) {
+            socket.emit('wrongPwd');
         } else {
             let word = data.newWord;
             if (!word.dibi || !word.french) {
@@ -67,8 +65,8 @@ io.on('connection', socket => {
     });
 
     socket.on('editWord', data => {
-        if (!tokens.includes(data.token)) {
-            socket.emit('wrongToken');
+        if (checkPwd(data.pwd)) {
+            socket.emit('wrongPwd');
         } else {
             let word = data.wordToEdit;
             if (!word.dibi || !word.french) {
@@ -95,8 +93,8 @@ io.on('connection', socket => {
     });
 
     socket.on('deleteWord', data => {
-        if (!tokens.includes(data.token)) {
-            socket.emit('wrongToken');
+        if (checkPwd(data.pwd)) {
+            socket.emit('wrongPwd');
         } else {
             let word = data.word;
             log('Suppression d\'un mot : ' + word.dibi);
@@ -120,12 +118,12 @@ io.on('connection', socket => {
     });
 
     socket.on('addRule', data => {
-        if (!tokens.includes(data.token)) {
-            socket.emit('wrongToken');
+        if (checkPwd(data.pwd)) {
+            socket.emit('wrongPwd');
         } else {
-            let word = data.newWord;
+            let rule = data.rule; // A Coder
             if (!word.dibi || !word.french) {
-                const mes = 'Impossible d\'ajouter le mot ' + word.dibi + ' car il faut au moins le mot en Dibi et sa tradution en Français'
+                const mes = 'Impossible d\'ajouter la règle ' + word.dibi + ' car il faut au moins le mot en Dibi et sa tradution en Français'
                 console.log(mes);
                 socket.emit('responseAddWord', {status: 2, mes: mes });
             } else {
@@ -142,10 +140,10 @@ io.on('connection', socket => {
     });
 
     socket.on('editRule', data => {
-        if (!tokens.includes(data.token)) {
-            socket.emit('wrongToken');
+        if (checkPwd(data.pwd)) {
+            socket.emit('wrongPwd');
         } else {
-            let rule = data.rule;
+            let rule = data.rule; // A Coder
             try {
                 client.db(clusterName).collection(collectionGrammarName).updateOne({_id: ObjectId(word._id)}, {$set: {dibi: word.dibi, french: word.french, english: word.english, partOfSpeech: word.partOfSpeech, author: word.author, date: word.date, description: word.description}}, (err, res) => {console.log(res);}, false);
             } catch (e) {
@@ -164,8 +162,8 @@ io.on('connection', socket => {
     });
 
     socket.on('deleteWord', data => {
-        if (!tokens.includes(data.token)) {
-            socket.emit('wrongToken');
+        if (checkPwd(data.pwd)) {
+            socket.emit('wrongPwd');
         } else {
             let word = data.word;
             log('Suppression d\'un mot : ' + word.dibi);
@@ -196,8 +194,8 @@ io.on('connection', socket => {
     });
 
     socket.on('editMcWord', data => {
-        if (!tokens.includes(data.token)) {
-            socket.emit('wrongToken');
+        if (checkPwd(data.pwd)) {
+            socket.emit('wrongPwd');
         } else {
             try {
                 client.db(clusterName).collection(collectionMinecraftName).updateOne({_id: ObjectId(data._id)}, {$set: {dibi: data.newWord, done: data.done}}, (err, res) => {console.log(res);}, false);
@@ -209,8 +207,8 @@ io.on('connection', socket => {
     });
 
     socket.on('editDoneMcWord', data => {
-        if (!tokens.includes(data.token)) {
-            socket.emit('wrongToken');
+        if (checkPwd(data.pwd)) {
+            socket.emit('wrongPwd');
         } else {
             try {
                 client.db(clusterName).collection(collectionMinecraftName).updateOne({_id: ObjectId(data._id)}, {$set: {done: data.done}}, (err, res) => {console.log(res);}, false);
@@ -230,30 +228,27 @@ io.on('connection', socket => {
         });
     });
 
-    // Tokens
+    // Gestion des connections admin
 
     socket.on('login', data => {
-        if (data.pwd === 'RGliaUppa3NhaWZvMjE=') {
-            log('Connexion admin réussie');
-            let token = Math.floor(Math.random() * 100000);
-            tokens.push(token);
-            socket.emit('trust', { token });
-        }
-    });
-
-    socket.on('isMyTokenValid', tok => {
-        console.log('isMyTokenValid');
-        if (tokens.includes(tok)) {
-            console.log('trust');
-            socket.emit('trust', { tok });
+        if (checkPwd(data.pwd)) {
+            console.log('Connexion admin réussie');
+            socket.emit('trust', { pwd: data.pwd });
         }
     });
 
     socket.on('logout', data => {
-        // Remove le token
     });
 
 });
+
+///////////////
+// FONCTIONS //
+///////////////
+
+function checkPwd(pwd) {
+    return pwd === adminPassword;
+}
 
 function log(message) {
     let log = { message, timestamp: new Date() };
