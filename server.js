@@ -47,8 +47,8 @@ io.on('connection', socket => {
             socket.emit('wrongPwd');
         } else {
             let word = data.newWord;
-            if (!word.dibi || !word.french) {
-                const mes = 'Impossible d\'ajouter le mot ' + word.dibi + ' car il faut au moins le mot en Dibi et sa tradution en Français'
+            if (!word.dibi || !word.french || !word.author) {
+                const mes = 'Impossible d\'ajouter le mot ' + word.dibi + ' car il faut au moins le mot en Dibi, sa tradution en Français et son créateur.'
                 console.log(mes);
                 socket.emit('responseAddWord', {status: 2, mes: mes });
             } else {
