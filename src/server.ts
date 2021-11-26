@@ -1,3 +1,4 @@
+
 const e = require('cors');
 var express = require('express');
 var app = express();
@@ -12,7 +13,7 @@ const port = process.env.PORT || 5000;
 app.set(port, process.env.PORT);
 app.use(express.static('./client/'));
 
-adminPassword = 'RGliaUppa3NhaWZvMjE='; // Mot de passe administrateur
+const adminPassword = 'RGliaUppa3NhaWZvMjE='; // Mot de passe administrateur
  
 // MongoDB
 const { MongoClient } = require('mongodb');
@@ -26,23 +27,23 @@ const collectionGrammarName = 'GrammarRules';
 const collectionMinecraftName = 'Minecraft';
 const collectionLogsName = 'logsDirtyPazu';
 
-client.connect(async (err) => {
+client.connect(async (err: any) => {
     if (err) throw err;
 });
 
-io.on('connection', socket => {
+io.on('connection', (socket: any) => {
 
     // Dictionnaire
 
     socket.on('fetchDict', () => {
         console.log('Récupération du dico');
-        client.db(clusterName).collection(collectionName).find().toArray((err, res) => {
+        client.db(clusterName).collection(collectionName).find().toArray((err: any, res: any) => {
             if (err) throw err;
             socket.emit('loadDict', {dict: res});
         });
     });
 
-    socket.on('addWord', data => {
+    socket.on('addWord', (data: any) => {
         if (checkPwd(data.pwd)) {
             socket.emit('wrongPwd');
         } else {
@@ -52,10 +53,10 @@ io.on('connection', socket => {
                 console.log(mes);
                 socket.emit('responseAddWord', {status: 2, mes: mes });
             } else {
-                log('Ajout d\'un mot : ' + word.dibi);
+                log('Ajout d\'un mot : ' + word.dibi, socket);
                 try {
                     client.db(clusterName).collection(collectionName).insertOne(word);
-                } catch (e) {
+                } catch (e: any) {
                     socket.emit('responseAddWord', {status: 1, mes: 'Erreur dans l\'enregistrement du mot : ' + e.message });
                     throw e;
                 }
@@ -64,7 +65,7 @@ io.on('connection', socket => {
         }
     });
 
-    socket.on('editWord', data => {
+    socket.on('editWord', (data: any) => {
         if (checkPwd(data.pwd)) {
             socket.emit('wrongPwd');
         } else {
@@ -75,8 +76,8 @@ io.on('connection', socket => {
                 socket.emit('responseEditWord', {status: 2, mes: mes });
             } else {
                 try {
-                    client.db(clusterName).collection(collectionName).updateOne({_id: ObjectId(word._id)}, {$set: {dibi: word.dibi, french: word.french, english: word.english, partOfSpeech: word.partOfSpeech, author: word.author, date: word.date, description: word.description}}, (err, res) => {console.log(res);}, false);
-                } catch (e) {
+                    client.db(clusterName).collection(collectionName).updateOne({_id: ObjectId(word._id)}, {$set: {dibi: word.dibi, french: word.french, english: word.english, partOfSpeech: word.partOfSpeech, author: word.author, date: word.date, description: word.description}}, (err: any, res: any) => {console.log(res);}, false);
+                } catch (e: any) {
                     socket.emit('responseEditWord', {status: 1, mes: 'Erreur dans la modification du mot : ' + e.message });
                     throw e;
                 }
@@ -86,18 +87,18 @@ io.on('connection', socket => {
                 word.english === data.oldWord.english ? {} : modifs.push(data.oldWord.english + ' => ' + word.english);
                 word.description === data.oldWord.description ? {} : modifs.push(data.oldWord.description + ' => ' + word.description);
                 word.author === data.oldWord.author ? {} : modifs.push(data.oldWord.author + ' => ' + word.author);
-                log(`Mot édité : ${modifs.join(', ')}`);
+                log(`Mot édité : ${modifs.join(', ')}`, socket);
                 socket.emit('responseEditWord', {status: 0, mes: word.dibi + ' modifié avec succès.' });
             }
         }
     });
 
-    socket.on('deleteWord', data => {
+    socket.on('deleteWord', (data: any) => {
         if (checkPwd(data.pwd)) {
             socket.emit('wrongPwd');
         } else {
             let word = data.word;
-            log('Suppression d\'un mot : ' + word.dibi);
+            log('Suppression d\'un mot : ' + word.dibi, socket);
             try {
                 client.db(clusterName).collection(collectionName).deleteOne({_id: ObjectId(word._id)});
                 socket.emit('wordDeleted', { });
@@ -108,7 +109,7 @@ io.on('connection', socket => {
     });
 
     // Grammaire
-
+/*
     socket.on('fetchGrammarRules', () => {
         console.log('Récupération des règles de grammaire');
         client.db(clusterName).collection(collectionGrammarName).find().toArray((err, res) => {
@@ -117,7 +118,7 @@ io.on('connection', socket => {
         });
     });
 
-    socket.on('addRule', data => {
+    socket.on('addRule', (data: any) => {
         if (checkPwd(data.pwd)) {
             socket.emit('wrongPwd');
         } else {
@@ -174,12 +175,12 @@ io.on('connection', socket => {
             }
         }
     });
-
+*/
     // Minecraft
 
     socket.on('fetchMinecraft', () => {
         console.log('Récupération des mots de Minecraft');
-        client.db(clusterName).collection(collectionMinecraftName).find().toArray((err, res) => {
+        client.db(clusterName).collection(collectionMinecraftName).find().toArray((err: any, res: any) => {
             if (err) throw err;
             socket.emit('loadMinecraftWordList', {dict: res});
         });
@@ -187,42 +188,42 @@ io.on('connection', socket => {
 
     socket.on('fetchMinecraftForDl', () => {
         console.log('Récupération des mots de Minecraft');
-        client.db(clusterName).collection(collectionMinecraftName).find().toArray((err, res) => {
+        client.db(clusterName).collection(collectionMinecraftName).find().toArray((err: any, res: any) => {
             if (err) throw err;
             socket.emit('loadMinecraftWordListForDl', {dict: res});
         });
     });
 
-    socket.on('editMcWord', data => {
+    socket.on('editMcWord', (data: any) => {
         if (checkPwd(data.pwd)) {
             socket.emit('wrongPwd');
         } else {
             try {
-                client.db(clusterName).collection(collectionMinecraftName).updateOne({_id: ObjectId(data._id)}, {$set: {dibi: data.newWord, done: data.done}}, (err, res) => {console.log(res);}, false);
+                client.db(clusterName).collection(collectionMinecraftName).updateOne({_id: ObjectId(data._id)}, {$set: {dibi: data.newWord, done: data.done}}, (err: any, res: any) => {console.log(res);}, false);
             } catch (e) {
                 throw e;
             }
-            log(`Mot minecraft édité : ${data.english} = ${data.newWord}`);
+            log(`Mot minecraft édité : ${data.english} = ${data.newWord}`, socket);
         }
     });
 
-    socket.on('editDoneMcWord', data => {
+    socket.on('editDoneMcWord', (data: any) => {
         if (checkPwd(data.pwd)) {
             socket.emit('wrongPwd');
         } else {
             try {
-                client.db(clusterName).collection(collectionMinecraftName).updateOne({_id: ObjectId(data._id)}, {$set: {done: data.done}}, (err, res) => {console.log(res);}, false);
+                client.db(clusterName).collection(collectionMinecraftName).updateOne({_id: ObjectId(data._id)}, {$set: {done: data.done}}, (err: any, res: any) => {console.log(res);}, false);
             } catch (e) {
                 throw e;
             }
-            log(`Mot minecraft mis à : ${data.done}`);
+            log(`Mot minecraft mis à : ${data.done}`, socket);
         }
     });
 
     // Logs
 
     socket.on('fetchLogs', () => {
-        client.db(clusterName).collection(collectionLogsName).find().toArray((err, res) => {
+        client.db(clusterName).collection(collectionLogsName).find().toArray((err: any, res: any) => {
             if (err) throw err;
             socket.emit('responseLogs', {logs: res});
         });
@@ -230,14 +231,14 @@ io.on('connection', socket => {
 
     // Gestion des connections admin
 
-    socket.on('login', data => {
+    socket.on('login', (data: any) => {
         if (checkPwd(data.pwd)) {
             console.log('Connexion admin réussie');
             socket.emit('trust', { pwd: data.pwd });
         }
     });
 
-    socket.on('logout', data => {
+    socket.on('logout', (data: any) => {
     });
 
 });
@@ -246,16 +247,16 @@ io.on('connection', socket => {
 // FONCTIONS //
 ///////////////
 
-function checkPwd(pwd) {
+function checkPwd(pwd: string) {
     return pwd === adminPassword;
 }
 
-function log(message) {
+function log(message: string, socket: any) {
     let log = { message, timestamp: new Date() };
     console.log(message);
     try {
         client.db(clusterName).collection(collectionLogsName).insertOne(log);
-    } catch (e) {
+    } catch (e: any) {
         socket.emit('responseAddWord', {status: 1, mes: 'Erreur dans l\'enregistrement du mot : ' + e.message });
         throw e;
     }
@@ -268,8 +269,8 @@ function log(message) {
 /**
  * Fourni la liste de tous les mots du dictionnaire
  */
-app.get('/dictionnary/getWords/all', function(req, res) {
-    client.db(clusterName).collection(collectionName).find().toArray((err, res2) => {
+app.get('/dictionnary/getWords/all', function(req: any, res: any) {
+    client.db(clusterName).collection(collectionName).find().toArray((err: any, res2: any) => {
         if (err) throw err;
         res.send(JSON.stringify(res2, null, 3));
     });
@@ -278,9 +279,9 @@ app.get('/dictionnary/getWords/all', function(req, res) {
 /**
  * 
  */
-app.get('/dictionnary/getWords/query', function(req, res) {
-    let query = { };
-    req.query._id ? query._id = ObjectID(req.query._id) : { };
+app.get('/dictionnary/getWords/query', function(req: any, res: any) {
+    let query: any = { };
+    req.query._id ? query._id = ObjectId(req.query._id) : { };
     req.query.dibi ? query.dibi = req.query.dibi : { };
     req.query.french ? query.french = req.query.french : { };
     req.query.english ? query.english = req.query.english : { };
@@ -289,7 +290,7 @@ app.get('/dictionnary/getWords/query', function(req, res) {
     req.query.date ? query.date = req.query.date : { };
     req.query.description ? query.description = req.query.description : { };
     console.log(query);
-    client.db(clusterName).collection(collectionName).find(query).toArray((err, res2) => {
+    client.db(clusterName).collection(collectionName).find(query).toArray((err: any, res2: any) => {
         if (err) throw err;
         res.send(JSON.stringify(res2, null, 3));
     });
