@@ -14,7 +14,7 @@ app.set(port, process.env.PORT);
 app.use(express.static('./client/'));
 
 const adminPassword = 'RGliaUppa3NhaWZvMjE='; // Mot de passe administrateur
- 
+
 // MongoDB
 const { MongoClient } = require('mongodb');
 const ObjectId = require('mongodb').ObjectID;
@@ -277,7 +277,7 @@ app.get('/dictionnary/getWords/all', function(req: any, res: any) {
 });
 
 /**
- * 
+ * A refaire !
  */
 app.get('/dictionnary/getWords/query', function(req: any, res: any) {
     let query: any = { };
