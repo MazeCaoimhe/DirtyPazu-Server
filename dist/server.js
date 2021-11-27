@@ -21,7 +21,6 @@ const port = process.env.PORT || 5000;
 app.set(port, process.env.PORT);
 app.use(express.static('./client/'));
 const adminPassword = 'RGliaUppa3NhaWZvMjE='; // Mot de passe administrateur
-console.log(Buffer.from('Test', 'base64'));
 // MongoDB
 const { MongoClient } = require('mongodb');
 const ObjectId = require('mongodb').ObjectID;
