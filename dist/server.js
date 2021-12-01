@@ -20,7 +20,7 @@ const io = require('socket.io')(http, {
 const port = process.env.PORT || 5000;
 app.set(port, process.env.PORT);
 app.use(express.static('./client/'));
-const adminPassword = 'RGliaUppa3NhaWZvMjE='; // Mot de passe administrateur
+const adminPassword = 'UGlya2lBdXJpYWwyMQ=='; // Mot de passe administrateur
 // MongoDB
 const { MongoClient } = require('mongodb');
 const ObjectId = require('mongodb').ObjectID;
