@@ -30,6 +30,7 @@ const clusterName = 'PazuSarl';
 const collectionName = 'DibiDictonary';
 const collectionGrammarName = 'GrammarRules';
 const collectionMinecraftName = 'Minecraft';
+const collectionUsersName = 'User';
 const collectionLogsName = 'logsDirtyPazu';
 client.connect((err) => __awaiter(void 0, void 0, void 0, function* () {
     if (err)
@@ -115,74 +116,46 @@ io.on('connection', (socket) => {
             }
         }
     });
-    // Grammaire
-    /*
-        socket.on('fetchGrammarRules', () => {
-            console.log('Récupération des règles de grammaire');
-            client.db(clusterName).collection(collectionGrammarName).find().toArray((err, res) => {
-                if (err) throw err;
-                socket.emit('loadRules', {rules: res});
-            });
+    // Utilisateurs
+    socket.on('loadUsers', () => {
+        console.log('Récupération des utilisateurs');
+        client.db(clusterName).collection(collectionUsersName).find().toArray((err, res) => {
+            if (err)
+                throw err;
+            socket.emit('usersLoaded', res);
         });
-    
-        socket.on('addRule', (data: any) => {
-            if (checkPwd(data.pwd)) {
-                socket.emit('wrongPwd');
-            } else {
-                let rule = data.rule; // A Coder
-                if (!word.dibi || !word.french) {
-                    const mes = 'Impossible d\'ajouter la règle ' + word.dibi + ' car il faut au moins le mot en Dibi et sa tradution en Français'
-                    console.log(mes);
-                    socket.emit('responseAddWord', {status: 2, mes: mes });
-                } else {
-                    log('Ajout d\'un mot : ' + word.dibi);
-                    try {
-                        client.db(clusterName).collection(collectionGrammarName).insertOne(word);
-                    } catch (e) {
-                        socket.emit('responseAddWord', {status: 1, mes: 'Erreur dans l\'enregistrement du mot : ' + e.message });
-                        throw e;
-                    }
-                    socket.emit('responseAddWord', {status: 0, mes: word.dibi + ' enregistré avec succès.' });
-                }
+    });
+    socket.on('newUser', (data) => {
+        if (checkPwd(data.pwd)) {
+            socket.emit('wrongPwd');
+        }
+        else {
+            try {
+                log('Création d\'un nouvel utilisateur : ' + data.user.pseudo + ' - ' + data.user.discordTagName, socket);
+                client.db(clusterName).collection(collectionUsersName).insertOne(data.user);
+                socket.emit('addUserSuccess');
             }
-        });
-    
-        socket.on('editRule', data => {
-            if (checkPwd(data.pwd)) {
-                socket.emit('wrongPwd');
-            } else {
-                let rule = data.rule; // A Coder
-                try {
-                    client.db(clusterName).collection(collectionGrammarName).updateOne({_id: ObjectId(word._id)}, {$set: {dibi: word.dibi, french: word.french, english: word.english, partOfSpeech: word.partOfSpeech, author: word.author, date: word.date, description: word.description}}, (err, res) => {console.log(res);}, false);
-                } catch (e) {
-                    socket.emit('responseEditWord', {status: 1, mes: 'Erreur dans la modification du mot : ' + e.message });
-                    throw e;
-                }
-                let modifs = [];
-                word.dibi === data.oldWord.dibi ? {} : modifs.push(data.oldWord.dibi + ' => ' + word.dibi);
-                word.french === data.oldWord.french ? {} : modifs.push(data.oldWord.french + ' => ' + word.french);
-                word.english === data.oldWord.english ? {} : modifs.push(data.oldWord.english + ' => ' + word.english);
-                word.description === data.oldWord.description ? {} : modifs.push(data.oldWord.description + ' => ' + word.description);
-                word.author === data.oldWord.author ? {} : modifs.push(data.oldWord.author + ' => ' + word.author);
-                log(`Mot édité : ${modifs.join(', ')}`);
-                socket.emit('responseEditWord', {status: 0, mes: word.dibi + ' modifié avec succès.' });
+            catch (e) {
+                socket.emit('addUserError', { mes: 'Erreur dans la création de l\'utilisateur : ' + e.message });
+                throw e;
             }
-        });
-    
-        socket.on('deleteWord', data => {
-            if (checkPwd(data.pwd)) {
-                socket.emit('wrongPwd');
-            } else {
-                let word = data.word;
-                log('Suppression d\'un mot : ' + word.dibi);
-                try {
-                    client.db(clusterName).collection(collectionName).deleteOne({_id: ObjectId(word._id)});
-                } catch (e) {
-                    throw e;
-                }
+        }
+    });
+    socket.on('deleteUser', (data) => {
+        if (checkPwd(data.pwd)) {
+            socket.emit('wrongPwd');
+        }
+        else {
+            log('Suppression d\'un utilisateur : ' + data.user.pseudo, socket);
+            try {
+                client.db(clusterName).collection(collectionUsersName).deleteOne({ _id: ObjectId(data.user._id) });
+                socket.emit('userDeleted', {});
             }
-        });
-    */
+            catch (e) {
+                throw e;
+            }
+        }
+    });
     // Minecraft
     socket.on('fetchMinecraft', () => {
         console.log('Récupération des mots de Minecraft');
@@ -241,6 +214,9 @@ io.on('connection', (socket) => {
         if (checkPwd(data.pwd)) {
             console.log('Connexion admin réussie');
             socket.emit('trust', { pwd: data.pwd });
+        }
+        else {
+            socket.emit('wrongPwd');
         }
     });
     socket.on('logout', (data) => {
