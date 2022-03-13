@@ -24,10 +24,7 @@ const clusterName = 'PazuSarl';
 
 const collectionName = 'DibiDictonary';
 const collectionSuggestion = 'Suggestion'
-const collectionProfilesName = 'Profiles' // Au pluriel car qu'une ligne
-const collectionGrammarName = 'GrammarRules'; // Déprécié
-const collectionMinecraftName = 'Minecraft'; // Déprécié
-const collectionUsersName = 'User'; // Déprécié
+const collectionProfilesName = 'Profiles'
 const collectionLogsName = 'logsDirtyPazu';
 
 client.connect(async (err: any) => {
@@ -69,7 +66,7 @@ io.on('connection', (socket: any) => {
                     socket.emit('responseAddWord', { status: 1, mes: 'Erreur dans l\'enregistrement du mot : ' + e.message });
                     throw e;
                 }
-                socket.emit('responseAddWord', { status: 0, mes: word.dibi + ' enregistré avec succès.' });
+                socket.emit('responseAddWord', { status: 0, mes: 'Proposition enregistrée avec succès' });
             }
         }
     });
@@ -136,28 +133,16 @@ io.on('connection', (socket: any) => {
         });
     });
 
-    socket.on('suggestWord', (data: { author: string, word: any, multipleDibi: boolean, dibiSuggestions?: any }) => {
-        // Étant une nouvelle suggestion, l'objet DibiWordSuggestion est créé avec comme version la première
-        let suggest = {
-            version: 1,
-            date: new Date(),
-            author: data.author,
-            word: data.word,
-            multipleDibi: data.multipleDibi,
-            dibiSuggestions: (data.multipleDibi && data.dibiSuggestions ? data.dibiSuggestions : undefined),
-            upVotes: [],
-            downVotes: [],
-            comments: [],
-            state: 'suggested'
-        };
-        log('Suggestion d\'un mot ' + (data.multipleDibi ? 'avec plusieurs choix à voter' : ': ' + data.word.dibi), socket);
+    socket.on('sendSuggestion', (dibiWordsSuggestion: {date: Date}) => {
+        log('Suggestion', socket);
+        dibiWordsSuggestion.date = new Date();
         try {
-            client.db(clusterName).collection(collectionSuggestion).insertOne(suggest);
+            client.db(clusterName).collection(collectionSuggestion).insertOne(dibiWordsSuggestion);
         } catch (e: any) {
-            socket.emit('responseSuggestWord', { status: 1, mes: 'Erreur dans la suggestion du mot : ' + e.message });
+            socket.emit('responseSuggestWord', { status: 1, mes: 'Erreur dans l\'ajout de la suggestion : ' + e.message });
             throw e;
         }
-        socket.emit('responseSuggestWord', { status: 0, mes: data.word.dibi + ' enregistré avec succès.' });
+        socket.emit('responseSuggestWord', { status: 0, mes: 'Suggestion enregistrée avec succès.' });
     });
 
     // Gestion des connections Google et admin
@@ -211,6 +196,17 @@ io.on('connection', (socket: any) => {
         } catch (e: any) {
             throw e;
         }
+    });
+
+    /**
+     * Récupère toutes les options des comptes utilisateur
+     */
+    socket.on('fetchProfiles', () => {
+        console.log('Récupération des comptes utilisateur');
+        client.db(clusterName).collection(collectionProfilesName).find().toArray((err: any, res: any) => {
+            if (err) throw err;
+            socket.emit('loadProfiles', res);
+        });
     });
 
     // Logs
