@@ -28,8 +28,9 @@ const uri = "mongodb+srv://Pazu:ufn0ddI1m5f04KWW@pazucluster.klrce.mongodb.net/m
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 const clusterName = 'PazuSarl';
 const collectionName = 'DibiDictonary';
-const collectionSuggestion = 'Suggestion';
-const collectionProfilesName = 'Profiles';
+const collectionGrammarName = 'GrammarRules';
+const collectionMinecraftName = 'Minecraft';
+const collectionUsersName = 'User';
 const collectionLogsName = 'logsDirtyPazu';
 client.connect((err) => __awaiter(void 0, void 0, void 0, function* () {
     if (err)
@@ -37,9 +38,6 @@ client.connect((err) => __awaiter(void 0, void 0, void 0, function* () {
 }));
 io.on('connection', (socket) => {
     // Dictionnaire
-    /**
-     * Récupère tous les mots du dictionnaire
-     */
     socket.on('fetchDict', () => {
         console.log('Récupération du dico');
         client.db(clusterName).collection(collectionName).find().toArray((err, res) => {
@@ -48,9 +46,6 @@ io.on('connection', (socket) => {
             socket.emit('loadDict', { dict: res });
         });
     });
-    /**
-     * Ajoute un mot au dictionnaire
-     */
     socket.on('addWord', (data) => {
         if (checkPwd(data.pwd)) {
             socket.emit('wrongPwd');
@@ -71,13 +66,10 @@ io.on('connection', (socket) => {
                     socket.emit('responseAddWord', { status: 1, mes: 'Erreur dans l\'enregistrement du mot : ' + e.message });
                     throw e;
                 }
-                socket.emit('responseAddWord', { status: 0, mes: 'Proposition enregistrée avec succès' });
+                socket.emit('responseAddWord', { status: 0, mes: word.dibi + ' enregistré avec succès.' });
             }
         }
     });
-    /**
-     * Modifie un mot du dictionnaire
-     */
     socket.on('editWord', (data) => {
         if (checkPwd(data.pwd)) {
             socket.emit('wrongPwd');
@@ -108,9 +100,6 @@ io.on('connection', (socket) => {
             }
         }
     });
-    /**
-     * Supprime un mot du dictionnaire
-     */
     socket.on('deleteWord', (data) => {
         if (checkPwd(data.pwd)) {
             socket.emit('wrongPwd');
@@ -127,34 +116,100 @@ io.on('connection', (socket) => {
             }
         }
     });
-    // Proposition de mots
-    /**
-     * Récupère toutes les suggestions
-     */
-    socket.on('fetchSuggestions', () => {
-        console.log('Récupération des suggestions');
-        client.db(clusterName).collection(collectionSuggestion).find().toArray((err, res) => {
+    // Utilisateurs
+    socket.on('loadUsers', () => {
+        console.log('Récupération des utilisateurs');
+        client.db(clusterName).collection(collectionUsersName).find().toArray((err, res) => {
             if (err)
                 throw err;
-            socket.emit('loadSuggestions', res);
+            socket.emit('usersLoaded', res);
         });
     });
-    socket.on('sendSuggestion', (dibiWordsSuggestion) => {
-        log('Suggestion', socket);
-        dibiWordsSuggestion.date = new Date();
-        try {
-            client.db(clusterName).collection(collectionSuggestion).insertOne(dibiWordsSuggestion);
+    socket.on('newUser', (data) => {
+        if (checkPwd(data.pwd)) {
+            socket.emit('wrongPwd');
         }
-        catch (e) {
-            socket.emit('responseSuggestWord', { status: 1, mes: 'Erreur dans l\'ajout de la suggestion : ' + e.message });
-            throw e;
+        else {
+            try {
+                log('Création d\'un nouvel utilisateur : ' + data.user.pseudo + ' - ' + data.user.discordTagName, socket);
+                client.db(clusterName).collection(collectionUsersName).insertOne(data.user);
+                socket.emit('addUserSuccess');
+            }
+            catch (e) {
+                socket.emit('addUserError', { mes: 'Erreur dans la création de l\'utilisateur : ' + e.message });
+                throw e;
+            }
         }
-        socket.emit('responseSuggestWord', { status: 0, mes: 'Suggestion enregistrée avec succès.' });
     });
-    // Gestion des connections Google et admin
-    /**
-     * Connexion admin
-     */
+    socket.on('deleteUser', (data) => {
+        if (checkPwd(data.pwd)) {
+            socket.emit('wrongPwd');
+        }
+        else {
+            log('Suppression d\'un utilisateur : ' + data.user.pseudo, socket);
+            try {
+                client.db(clusterName).collection(collectionUsersName).deleteOne({ _id: ObjectId(data.user._id) });
+                socket.emit('userDeleted', {});
+            }
+            catch (e) {
+                throw e;
+            }
+        }
+    });
+    // Minecraft
+    socket.on('fetchMinecraft', () => {
+        console.log('Récupération des mots de Minecraft');
+        client.db(clusterName).collection(collectionMinecraftName).find().toArray((err, res) => {
+            if (err)
+                throw err;
+            socket.emit('loadMinecraftWordList', { dict: res });
+        });
+    });
+    socket.on('fetchMinecraftForDl', () => {
+        console.log('Récupération des mots de Minecraft');
+        client.db(clusterName).collection(collectionMinecraftName).find().toArray((err, res) => {
+            if (err)
+                throw err;
+            socket.emit('loadMinecraftWordListForDl', { dict: res });
+        });
+    });
+    socket.on('editMcWord', (data) => {
+        if (checkPwd(data.pwd)) {
+            socket.emit('wrongPwd');
+        }
+        else {
+            try {
+                client.db(clusterName).collection(collectionMinecraftName).updateOne({ _id: ObjectId(data._id) }, { $set: { dibi: data.newWord, done: data.done } }, (err, res) => { console.log(res); }, false);
+            }
+            catch (e) {
+                throw e;
+            }
+            log(`Mot minecraft édité : ${data.english} = ${data.newWord}`, socket);
+        }
+    });
+    socket.on('editDoneMcWord', (data) => {
+        if (checkPwd(data.pwd)) {
+            socket.emit('wrongPwd');
+        }
+        else {
+            try {
+                client.db(clusterName).collection(collectionMinecraftName).updateOne({ _id: ObjectId(data._id) }, { $set: { done: data.done } }, (err, res) => { console.log(res); }, false);
+            }
+            catch (e) {
+                throw e;
+            }
+            log(`Mot minecraft mis à : ${data.done}`, socket);
+        }
+    });
+    // Logs
+    socket.on('fetchLogs', () => {
+        client.db(clusterName).collection(collectionLogsName).find().toArray((err, res) => {
+            if (err)
+                throw err;
+            socket.emit('responseLogs', { logs: res });
+        });
+    });
+    // Gestion des connections admin
     socket.on('login', (data) => {
         if (checkPwd(data.pwd)) {
             console.log('Connexion admin réussie');
@@ -165,65 +220,6 @@ io.on('connection', (socket) => {
         }
     });
     socket.on('logout', (data) => {
-    });
-    /**
-     * Connexion Google
-     * La connexion Google se fait à l'extérieur, cette méthode sert à récupérer les options du profils appelées AccountSettings
-     */
-    socket.on('loadProfile', (user) => {
-        client.db(clusterName).collection(collectionProfilesName).find().toArray((err, res) => {
-            if (err)
-                throw err;
-            let elem = res[res.findIndex((i) => i.email === user.email)];
-            if (elem) {
-                socket.emit('responseProfile', { user, accountSettings: elem });
-            }
-            else {
-                socket.emit('responseProfile', { user });
-            }
-        });
-    });
-    /**
-     * Complète les informations d'un profil
-     */
-    socket.on('setProfile', (data) => {
-        log(`Modification du profil ${data.user.email} : ${data.discordPseudo}#${data.discordTag}`, socket);
-        // Suppression de la ligne
-        try {
-            client.db(clusterName).collection(collectionProfilesName).deleteOne({ email: data.user.email });
-        }
-        catch (e) {
-            throw e;
-        }
-        // Réécriture de la ligne
-        try {
-            client.db(clusterName).collection(collectionProfilesName).insertOne(data);
-        }
-        catch (e) {
-            throw e;
-        }
-    });
-    /**
-     * Récupère toutes les options des comptes utilisateur
-     */
-    socket.on('fetchProfiles', () => {
-        console.log('Récupération des comptes utilisateur');
-        client.db(clusterName).collection(collectionProfilesName).find().toArray((err, res) => {
-            if (err)
-                throw err;
-            socket.emit('loadProfiles', res);
-        });
-    });
-    // Logs
-    /**
-     * Récupère tous les logs
-     */
-    socket.on('fetchLogs', () => {
-        client.db(clusterName).collection(collectionLogsName).find().toArray((err, res) => {
-            if (err)
-                throw err;
-            socket.emit('responseLogs', { logs: res });
-        });
     });
 });
 ///////////////
