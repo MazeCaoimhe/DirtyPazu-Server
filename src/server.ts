@@ -133,7 +133,7 @@ io.on('connection', (socket: any) => {
         });
     });
 
-    socket.on('sendSuggestion', (dibiWordsSuggestion: {date: Date}) => {
+    socket.on('sendSuggestion', (dibiWordsSuggestion: any) => {
         log('Suggestion', socket);
         dibiWordsSuggestion.date = new Date();
         try {
