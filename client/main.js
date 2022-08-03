@@ -55,10 +55,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _main_connect_center_connect_center_component__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./main/connect-center/connect-center.component */ 206);
 /* harmony import */ var _main_dibi_suggest_dibi_suggest_component__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./main/dibi-suggest/dibi-suggest.component */ 4398);
 /* harmony import */ var _main_dibi_vote_dibi_vote_component__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./main/dibi-vote/dibi-vote.component */ 4634);
+/* harmony import */ var _main_dibi_grammar_dibi_grammar_component__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./main/dibi-grammar/dibi-grammar.component */ 9497);
 /* harmony import */ var angularx_social_login__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! angularx-social-login */ 4260);
-/* harmony import */ var _main_account_account_component__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./main/account/account.component */ 593);
-/* harmony import */ var _main_dibi_grammar_dibi_grammar_component__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./main/dibi-grammar/dibi-grammar.component */ 9497);
+/* harmony import */ var _main_account_account_component__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./main/account/account.component */ 593);
 /* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! @angular/core */ 3184);
+
 
 
 
@@ -81,8 +82,9 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
-const socialId = '886518860996-o45rlpuk1f0n9verombausklme0ampga.apps.googleusercontent.com';
+const socialId_DibiTest = '886518860996-o45rlpuk1f0n9verombausklme0ampga.apps.googleusercontent.com';
+const socialId_Dibi_Pilk = '886518860996-vcl8oia31cs9djifk1glfaolleb2vulq.apps.googleusercontent.com';
+const socialId = socialId_Dibi_Pilk;
 // Socket.io
 const hostname = window.location.hostname;
 const url = (hostname === 'localhost') ? `${window.location.protocol}//${hostname}:5000` : undefined;
@@ -125,8 +127,8 @@ AppModule.ɵinj = /*@__PURE__*/ _angular_core__WEBPACK_IMPORTED_MODULE_12__["ɵ�
         _main_connect_center_connect_center_component__WEBPACK_IMPORTED_MODULE_7__.ConnectCenterComponent,
         _main_dibi_suggest_dibi_suggest_component__WEBPACK_IMPORTED_MODULE_8__.DibiSuggestComponent,
         _main_dibi_vote_dibi_vote_component__WEBPACK_IMPORTED_MODULE_9__.DibiVoteComponent,
-        _main_account_account_component__WEBPACK_IMPORTED_MODULE_10__.AccountComponent,
-        _main_dibi_grammar_dibi_grammar_component__WEBPACK_IMPORTED_MODULE_11__.DibiGrammarComponent], imports: [_angular_platform_browser__WEBPACK_IMPORTED_MODULE_14__.BrowserModule,
+        _main_account_account_component__WEBPACK_IMPORTED_MODULE_11__.AccountComponent,
+        _main_dibi_grammar_dibi_grammar_component__WEBPACK_IMPORTED_MODULE_10__.DibiGrammarComponent], imports: [_angular_platform_browser__WEBPACK_IMPORTED_MODULE_14__.BrowserModule,
         _angular_forms__WEBPACK_IMPORTED_MODULE_15__.FormsModule,
         _angular_common__WEBPACK_IMPORTED_MODULE_16__.CommonModule,
         _angular_common_http__WEBPACK_IMPORTED_MODULE_17__.HttpClientModule, ngx_socket_io__WEBPACK_IMPORTED_MODULE_18__.SocketIoModule, ng2_charts__WEBPACK_IMPORTED_MODULE_19__.ChartsModule,
