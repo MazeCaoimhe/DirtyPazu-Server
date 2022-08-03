@@ -83,8 +83,8 @@ __webpack_require__.r(__webpack_exports__);
 
 
 const socialId_DibiTest = '886518860996-o45rlpuk1f0n9verombausklme0ampga.apps.googleusercontent.com';
-const socialId_Dibi_Pilk = '886518860996-vcl8oia31cs9djifk1glfaolleb2vulq.apps.googleusercontent.com';
-const socialId = socialId_Dibi_Pilk;
+const socialId_Dibi_Pilk = '886518860996-vcl8oia31cs9djifk1glfaolleb2vulq.apps.googleusercontent.com'; // Supprimé
+const socialId = socialId_DibiTest;
 // Socket.io
 const hostname = window.location.hostname;
 const url = (hostname === 'localhost') ? `${window.location.protocol}//${hostname}:5000` : undefined;
